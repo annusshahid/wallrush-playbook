@@ -1,0 +1,298 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>The WallRush Playbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a 9x9 game board's world — topic rail on the left, one chapter per screen, big bold rule up top, prev/next pager below */
+:root{
+  --bg:#eef5f8; --panel:#ffffff; --rail:#dde9ef; --ink:#0c2230; --muted:#4f6a78; --line:#c3d6df;
+  --accent:#0a8fa3; --accent-2:#3a5bd9; --you:#0a8fa3; --them:#5b4fd6; --gate:#11a86b; --wall:#e0573a;
+  --cell:#e3eef3; --cell-2:#d5e5ec; --callout:#d9f1f4;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#08151d; --panel:#0e212c; --rail:#0b1b24; --ink:#e6f3f8; --muted:#8fb0bf; --line:#1d3b4a;
+  --accent:#3fd0e0; --accent-2:#8aa2ff; --you:#3fd0e0; --them:#a49bff; --gate:#3ddc97; --wall:#ff7a5a;
+  --cell:#12303e; --cell-2:#0f2835; --callout:#0f3340; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#08151d; --panel:#0e212c; --rail:#0b1b24; --ink:#e6f3f8; --muted:#8fb0bf; --line:#1d3b4a;
+  --accent:#3fd0e0; --accent-2:#8aa2ff; --you:#3fd0e0; --them:#a49bff; --gate:#3ddc97; --wall:#ff7a5a;
+  --cell:#12303e; --cell-2:#0f2835; --callout:#0f3340; color-scheme:dark }
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6}
+.app{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100%}
+
+/* rail */
+.rail{background:var(--rail);border-right:1px solid var(--line);position:sticky;top:0;height:100vh;overflow-y:auto;
+  padding-block:28px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:20px;display:flex;flex-direction:column;gap:24px}
+.brand{display:flex;flex-direction:column;gap:4px}
+.brand .mark{font-family:var(--f-display);font-weight:900;font-size:26px;line-height:1.05;letter-spacing:-.01em}
+.brand .mark span{color:var(--accent)}
+.brand .sub{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.toc{display:flex;flex-direction:column;gap:18px}
+.toc h3{font-family:var(--f-mono);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.toc button{all:unset;cursor:pointer;display:grid;grid-template-columns:28px 1fr;align-items:baseline;gap:6px;width:100%;
+  padding:8px 10px;border-radius:8px;font-weight:700;font-size:15px;line-height:1.3;color:var(--ink)}
+.toc button .n{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.toc button:hover{background:var(--panel)}
+.toc button[aria-current="page"]{background:var(--accent);color:var(--bg)}
+.toc button[aria-current="page"] .n{color:var(--bg)}
+.toc button:focus-visible,.pager button:focus-visible,.topics-btn:focus-visible{outline:3px solid var(--accent-2);outline-offset:2px}
+
+/* main */
+main{min-width:0;display:flex;flex-direction:column;padding-block:0 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.progress{position:sticky;top:env(safe-area-inset-top,0px);height:6px;background:var(--line);margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px))) calc(-1*max(16px,env(safe-area-inset-right,0px)));z-index:5}
+.progress i{display:block;height:100%;background:var(--accent);transition:width .35s ease}
+.topbar{display:none}
+.page{width:100%;max-width:820px;margin:0 auto;padding-top:56px;display:flex;flex-direction:column;gap:28px}
+.eyebrow{font-family:var(--f-mono);font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:flex;gap:12px;flex-wrap:wrap}
+.eyebrow .count{color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:900;font-size:clamp(2.2rem,5.2vw,3.8rem);line-height:1.05;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.rule{font-family:var(--f-display);font-weight:600;font-size:clamp(1.15rem,2.2vw,1.5rem);line-height:1.35;margin:0;
+  background:var(--callout);border-radius:14px;padding:22px 24px;text-wrap:balance}
+.body{display:flex;flex-direction:column;gap:18px;max-width:66ch}
+.body p{margin:0}
+.body strong{font-weight:700}
+.body ul,.body ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:10px}
+.body li::marker{color:var(--accent);font-weight:700}
+.body h2{font-family:var(--f-display);font-weight:800;font-size:1.35rem;margin:10px 0 0;letter-spacing:-.01em}
+.tag{font-family:var(--f-mono);font-size:.85em;font-weight:700;padding:1px 7px;border-radius:6px;background:var(--cell-2)}
+.tag.you{color:var(--you)} .tag.them{color:var(--them)} .tag.gate{color:var(--gate)} .tag.wall{color:var(--wall)}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px;max-width:520px}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:15px;color:var(--muted);line-height:1.45}
+.versus{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.versus div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:6px}
+.versus .big{font-family:var(--f-display);font-weight:900;font-size:2.4rem;line-height:1}
+.versus .good .big{color:var(--gate)} .versus .meh .big{color:var(--muted)}
+.versus .lbl{font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.versus p{margin:0;font-size:16px}
+.pager{max-width:820px;width:100%;margin:56px auto 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.pager button{all:unset;cursor:pointer;border:2px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;background:var(--panel);min-width:0}
+.pager button:hover{border-color:var(--accent)}
+.pager .dir{font-family:var(--f-mono);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.pager .t{font-family:var(--f-display);font-weight:800;font-size:1.05rem;line-height:1.25}
+.pager .next{text-align:right;grid-column:2}
+.pager button[disabled]{visibility:hidden}
+.keys{max-width:820px;width:100%;margin:14px auto 0;font-family:var(--f-mono);font-size:12px;color:var(--muted);text-align:center}
+kbd{font-family:var(--f-mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px}
+.page.enter{animation:in .35s ease}
+@keyframes in{from{transform:translateY(8px);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.page.enter{animation:none}.progress i{transition:none}}
+
+/* phone */
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .rail{position:fixed;inset:0 auto 0 0;width:min(320px,86vw);height:100%;z-index:20;transform:translateX(-102%);transition:transform .25s ease;
+    padding-top:calc(24px + env(safe-area-inset-top,0px));padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));box-shadow:0 0 40px rgba(0,0,0,.25)}
+  .app.open .rail{transform:none}
+  .scrim{position:fixed;inset:0;background:rgba(4,14,20,.45);z-index:15}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:14px}
+  .topbar .mark{font-family:var(--f-display);font-weight:900;font-size:18px}
+  .topbar .mark span{color:var(--accent)}
+  .topics-btn{all:unset;cursor:pointer;font-weight:700;font-size:15px;border:2px solid var(--line);border-radius:10px;padding:6px 14px;background:var(--panel)}
+  .page{padding-top:28px}
+  body{font-size:17px}
+  .keys{display:none}
+}
+@media (max-width:480px){ .versus,.pager{grid-template-columns:minmax(0,1fr)} .pager .next{grid-column:1} }
+</style>
+
+<div class="app" id="app">
+  <aside class="rail" id="rail" aria-label="Topics">
+    <div class="brand"><div class="mark">Wall<span>Rush</span><br>Playbook</div><div class="sub">By Annus · 7×7 board</div></div>
+    <nav class="toc" id="toc"></nav>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+  <main>
+    <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+    <div class="topbar"><div class="mark">Wall<span>Rush</span> Playbook</div><button class="topics-btn" id="topicsBtn" aria-expanded="false" aria-controls="rail">Topics</button></div>
+    <article class="page" id="page" aria-live="polite"></article>
+    <div class="pager">
+      <button class="prev" id="prev"><span class="dir">← Previous</span><span class="t" id="prevT"></span></button>
+      <button class="next" id="next"><span class="dir">Next →</span><span class="t" id="nextT"></span></button>
+    </div>
+    <div class="keys">Use <kbd>←</kbd> <kbd>→</kbd> to turn pages</div>
+  </main>
+</div>
+
+<script>
+/* ---------- tiny board renderer ---------- */
+const S=34, P=16;           // cell size, padding
+function board(o){
+  const n=7, w=n*S+P*2, cells=[];
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++){
+    cells.push(`<rect x="${P+c*S+2}" y="${P+r*S+2}" width="${S-4}" height="${S-4}" rx="5" fill="var(${(r+c)%2?'--cell-2':'--cell'})"/>`);
+  }
+  const goal=(row,col)=>`<rect x="${P}" y="${P+row*S}" width="${n*S}" height="3" fill="var(${col})"/>`;
+  const walls=(o.walls||[]).map(([d,r,c,len=2])=> d==='h'
+    ? `<rect x="${P+c*S}" y="${P+(r+1)*S-3}" width="${len*S}" height="6" rx="3" fill="var(--wall)"/>`
+    : `<rect x="${P+(c+1)*S-3}" y="${P+r*S}" width="6" height="${len*S}" rx="3" fill="var(--wall)"/>`).join('');
+  const ctr=(r,c)=>[P+c*S+S/2,P+r*S+S/2];
+  const path=o.path?`<polyline points="${o.path.map(([r,c])=>ctr(r,c).join(',')).join(' ')}" fill="none" stroke="var(${o.pathColor||'--them'})" stroke-width="3" stroke-dasharray="6 5" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>`:'';
+  const gates=(o.gates||[]).map(([r,c,label,col])=>{const[x,y]=[P+c*S+S/2,P+(r+1)*S];
+    return `<circle cx="${x}" cy="${y}" r="11" fill="var(${col})"/><text x="${x}" y="${y+4}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="11" fill="var(--panel)">${label}</text>`}).join('');
+  const pawn=([r,c],col,lbl)=>{const[x,y]=ctr(r,c);return `<circle cx="${x}" cy="${y}" r="11" fill="var(${col})"/><text x="${x}" y="${y+4}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="11" fill="var(--panel)">${lbl}</text>`};
+  return `<svg viewBox="0 0 ${w} ${w}" role="img" aria-label="${o.label}">${cells.join('')}${goal(0,'--you')}<rect x="${P}" y="${P+n*S-3}" width="${n*S}" height="3" fill="var(--them)"/>${walls}${path}${gates}${(o.pawns||[]).map(p=>pawn(...p)).join('')}</svg>`;
+}
+
+/* ---------- content ---------- */
+const parts=["Basics","Core principles","Opening","Midgame","Endgame","Common mistakes"];
+const pages=[
+{id:"intro",part:0,title:"How WallRush works",
+ rule:"First pawn to reach the far side of the board wins.",
+ body:`<p>WallRush is a race on a 7×7 board. You start on one edge, your opponent starts on the other, and each of you is trying to get across first.</p>
+ <ol><li>On your turn, either <strong>move your pawn one square</strong> or <strong>place one wall</strong>.</li>
+ <li>Each wall is <strong>2 tiles wide</strong>. A wall can't be jumped, only walked around.</li>
+ <li>You can <strong>never seal a player off</strong> from their goal completely. There's always a way through.</li>
+ <li>When the pawns meet face to face, you can <strong>jump over</strong> your opponent.</li></ol>
+ <h2>Why there's always an opening</h2>
+ <p>The board is 7 tiles wide and walls are 2 tiles wide, so a row of horizontal walls covers 2, 4 or 6 tiles, never all 7. Whenever you start building a horizontal line, one side will be left open. Plan which side that is.</p>
+ <p>Everything in this playbook comes back to one question: who has the shorter road home?</p>`,
+ fig:{svg:board({label:"Starting position",pawns:[[[6,3],'--you','Y'],[[0,3],'--them','T']]}),
+   cap:`<span class="tag you">Y</span> you start at the bottom and race to the top edge. <span class="tag them">T</span> your opponent does the reverse.`}},
+
+{id:"distance",part:1,n:1,title:"Shrink your distance, stretch theirs",
+ rule:"Every move should either shorten your path to the goal or lengthen your opponent's.",
+ body:`<p>That's the whole game in one line. A pawn move cuts your own distance. A wall adds to theirs.</p>
+ <p>Before each turn, count both paths and compare. Pick the option that widens the gap in your favour the most.</p>
+ <p>Shrinking your own distance matters just as much as stretching theirs. A tile you protect counts the same as a tile you add. You'll see this again in the endgame.</p>`},
+
+{id:"three-gates",part:1,n:2,title:"The Three Gates",
+ rule:"Close the gates that help your opponent, and keep your own gates open.",
+ body:`<p>As walls go up, the board splits into regions joined by a few gaps. These gaps are the <strong>gates</strong>, and you'll often see three of them:</p>
+ <ul><li><span class="tag you">Your gate</span> leads toward your goal.</li>
+ <li><span class="tag them">Their gate</span> leads toward your opponent's goal.</li>
+ <li><span class="tag gate">The shared gate</span> is equally useful to both of you.</li></ul>
+ <p>When you see the gates, stop thinking about single walls. Ask which openings each wall closes.</p>
+ <h2>Close two, and the third is safe</h2>
+ <p>Shut their gate and the shared gate first. Your gate is then the only way through, and the rules protect it: walls can never block a path completely, so your opponent can't close it.</p>
+ <p>You've locked in your route, and the detour is theirs. Whoever closes two gates first wins the exchange, so treat it as a race.</p>`,
+ fig:{svg:board({label:"Three gates in a wall line",walls:[['h',2,1],['h',2,4]],
+   gates:[[2,0,'Y','--you'],[2,3,'S','--gate'],[2,6,'T','--them']],pawns:[[[5,3],'--you','Y'],[[0,3],'--them','T']]}),
+   cap:`A schematic. A wall line has three gaps: <span class="tag you">Y</span> your gate, <span class="tag gate">S</span> the shared gate, <span class="tag them">T</span> their gate. Close S and T and the rules keep Y open.`}},
+
+{id:"battleground",part:1,n:3,title:"Make their half the battleground",
+ rule:"Cover distance early so the fighting happens in your opponent's half, not yours.",
+ body:`<p>If the walls and gates end up on their side, you're most of the way home before the battle even starts.</p>
+ <p>Even if you have to leave the fight through the shared gate, the distance left is short for you and long for them.</p>`},
+
+{id:"hold-walls",part:2,title:"Hold your walls",
+ rule:"Don't place walls early. Move forward and let your opponent spend theirs first.",
+ body:`<p>Use your first turns to cover distance (see <em>Make their half the battleground</em>). Walls are worth far more later, when every tile counts.</p>
+ <h2>The one exception</h2>
+ <p>Respond when your opponent forces you to. That's when they keep blocking you with a <strong>long horizontal line</strong> of walls.</p>
+ <p>Then <strong>block one end of their line</strong>. You turn the hurdle they built into something that works for you, using walls they paid for.</p>
+ <h2>Don't panic</h2>
+ <p>One wall isn't a line. Let them pour their walls in first, then respond.</p>`},
+
+{id:"shared-box",part:3,title:"Lead the way through a shared box",
+ rule:"When you're both boxed into the same region, be the one in front.",
+ body:`<ul><li><strong>If you're ahead:</strong> any hurdle they add in the box is one they still have to get through themselves.</li>
+ <li><strong>If you're behind:</strong> they get through first, then drop hurdles behind them. Now only you have to clear them.</li></ul>
+ <p>Being in front turns their walls into their problem. Being behind turns them into yours.</p>
+ <h2>Behind? Flip it</h2>
+ <ol><li><strong>Turn the path around.</strong> Use walls to reverse which way the exit runs, so it ends up on your side and you're the one in front.</li>
+ <li><strong>Close the path in front of them.</strong> Shut the opening ahead of your opponent so they have to come all the way back and leave through the same path as you. Now they're following.</li></ol>`},
+
+{id:"wall-count",part:3,title:"Make every wall count",
+ rule:"Place each wall where it adds the most distance to your opponent's journey.",
+ body:`<p>Walls are limited. Before placing one, count how many tiles it adds to their path.</p>
+ <p>If another spot adds more, put it there instead.</p>`},
+
+{id:"two-paths",part:3,title:"Two paths? Close the long one",
+ rule:"Close your long path yourself, before your opponent closes your short one.",
+ body:`<p>Sometimes you'll have two ways forward: a short one and a long one. If you wait, your opponent will close the short one and leave you the long one.</p>
+ <p>Close the long one first. Then the short path is your only way through, and the rules won't let your opponent block it.</p>`},
+
+{id:"defend",part:4,title:"Defend your path as hard as you attack theirs",
+ rule:"In the endgame, protecting your route is worth as much as lengthening theirs.",
+ body:`<p>A wall can do one of two jobs:</p>
+ <ul><li><strong>Attack:</strong> add tiles to your opponent's path.</li>
+ <li><strong>Defend:</strong> stop your opponent from adding tiles to yours.</li></ul>
+ <p>Measure both before you place it, and pick the bigger number.</p>`,
+ extra:`<div class="versus"><div class="good"><span class="lbl">Defend</span><span class="big">6</span><p>Stops them adding 6 tiles to your path. <strong>Better.</strong></p></div>
+ <div class="meh"><span class="lbl">Attack</span><span class="big">4</span><p>Adds 4 tiles to their path.</p></div></div>`},
+
+{id:"zigzag",part:4,title:"Zigzag a narrow path",
+ rule:"Opponent stuck in a narrow path near the end? Wall it in a zigzag.",
+ body:`<p>Alternate the walls from side to side along their corridor. Instead of walking straight through, they have to weave back and forth.</p>
+ <p>It's an easy way to add a lot of distance with only a few walls.</p>`,
+ fig:{svg:board({label:"Zigzag walls in a narrow corridor",
+   walls:[['v',1,1,6],['v',1,4,6],['h',1,2],['h',3,3],['h',5,2]],
+   path:[[1,3],[1,4],[3,4],[3,2],[5,2],[5,4],[6,4]],
+   pawns:[[[1,3],'--them','T']]}),
+   cap:`A schematic. <span class="tag them">T</span> is heading for the bottom edge. Alternating <span class="tag wall">walls</span> force the dashed snaking route instead of a straight walk down.`}},
+
+{id:"all-in",part:4,title:"When they're out of walls, go all in",
+ rule:"Opponent at zero walls? Spend every wall you have lengthening their path.",
+ body:`<p>With no walls left, your opponent can't add a single tile to your path. There's nothing left to defend against.</p>
+ <p>So stop holding walls in reserve. Every wall you have should now go into stretching their route.</p>`},
+
+{id:"tunnel",part:5,title:"Entering a tunnel without closing it behind you",
+ rule:"Close the back of a tunnel as you walk in, or your opponent can close the front.",
+ body:`<p>If you walk into a tunnel and leave the back open, your opponent can shut the front. Now you have to walk all the way back out.</p>
+ <p>Close the tunnel behind you as you go in. With the back shut, the front is your only way through, and the rules won't let your opponent close it. It's the Three Gates idea on a smaller scale.</p>`},
+
+{id:"last-walls",part:5,title:"Running out of walls first",
+ rule:"Keep at least 2 walls for the endgame.",
+ body:`<p>If you hit zero walls while your opponent still has some, you can't answer anything they do. They can stretch your path freely and you're very exposed.</p>
+ <p>The flip side is in the Endgame section: once <em>they</em> hit zero first, you can go all in.</p>`},
+
+{id:"use-it",part:5,title:"Holding a wall when you need it now",
+ rule:"Don't keep waiting for the endgame. When a wall is needed, use it.",
+ body:`<p>Say your opponent is about to lengthen your path, and one wall from you would stop it. Place it now, even if it's your last wall.</p>
+ <p>A wall saved is useless once the damage is done.</p>
+ <p>Keeping 2 walls in reserve (previous page) is a good default, but it's never a reason to let your opponent stretch your path.</p>`}
+];
+
+/* ---------- render ---------- */
+const $=id=>document.getElementById(id);
+let cur=0;
+function buildToc(){
+  $('toc').innerHTML=parts.map((name,pi)=>{
+    const items=pages.map((p,i)=>({p,i})).filter(x=>x.p.part===pi);
+    return `<div><h3>${name}</h3><ol>${items.map(({p,i})=>`<li><button data-i="${i}"><span class="n">${String(i+1).padStart(2,'0')}</span><span>${p.title}</span></button></li>`).join('')}</ol></div>`;
+  }).join('');
+  $('toc').addEventListener('click',e=>{const b=e.target.closest('button');if(b){go(+b.dataset.i);closeRail();}});
+}
+function go(i,push=true){
+  cur=Math.max(0,Math.min(pages.length-1,i));
+  const p=pages[cur], el=$('page');
+  const label=parts[p.part]+(p.n?` · Principle ${p.n}`:'');
+  el.innerHTML=`<div class="eyebrow"><span>${label}</span><span class="count">${cur+1} / ${pages.length}</span></div>
+    <h1>${p.title}</h1><p class="rule">${p.rule}</p><div class="body">${p.body}</div>${p.extra||''}
+    ${p.fig?`<figure>${p.fig.svg}<figcaption>${p.fig.cap}</figcaption></figure>`:''}`;
+  el.classList.remove('enter');void el.offsetWidth;el.classList.add('enter');
+  document.querySelectorAll('.toc button').forEach(b=>{ if(+b.dataset.i===cur) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
+  const pv=pages[cur-1], nx=pages[cur+1];
+  $('prev').disabled=!pv; $('prevT').textContent=pv?pv.title:'';
+  $('next').disabled=!nx; $('nextT').textContent=nx?nx.title:'';
+  $('bar').style.width=((cur+1)/pages.length*100)+'%';
+  if(push){ try{history.replaceState(null,'','#'+p.id)}catch(e){} window.scrollTo({top:0}); }
+  try{localStorage.setItem('wr-page',p.id)}catch(e){}
+}
+function closeRail(){$('app').classList.remove('open');$('scrim').hidden=true;$('topicsBtn').setAttribute('aria-expanded','false')}
+$('topicsBtn').onclick=()=>{const o=$('app').classList.toggle('open');$('scrim').hidden=!o;$('topicsBtn').setAttribute('aria-expanded',String(o))};
+$('scrim').onclick=closeRail;
+$('prev').onclick=()=>go(cur-1); $('next').onclick=()=>go(cur+1);
+document.addEventListener('keydown',e=>{
+  if(e.target.closest('input,textarea'))return;
+  if(e.key==='ArrowRight')go(cur+1); else if(e.key==='ArrowLeft')go(cur-1); else if(e.key==='Escape')closeRail();
+});
+buildToc();
+let start=0;
+const fromHash=pages.findIndex(p=>'#'+p.id===location.hash);
+if(fromHash>=0)start=fromHash; else { try{const s=localStorage.getItem('wr-page');const k=pages.findIndex(p=>p.id===s);if(k>=0)start=k}catch(e){} }
+go(start,false);
+</script>
+
+</body></html>
